@@ -1,5 +1,5 @@
 import dsteem from 'dsteem';
-const { Client, cryptoUtils, Signature, PublicKey } = dsteem;
+//const { Client, cryptoUtils, Signature, PublicKey } = dsteem;
 
 try {
   let signature =
@@ -8,19 +8,16 @@ try {
 
   const messageBuffer = Buffer.from(message, 'utf8');
 
-  // 2️⃣ Steem Keychain は SHA256(message) を署名しているので同じくハッシュ化
-  const digest = cryptoUtils.sha256(messageBuffer);
+  // Steem Keychain は SHA256(message) を署名しているので同じくハッシュ化
+  const digest = dsteem.cryptoUtils.sha256(messageBuffer);
 
-  // 3️⃣ 署名オブジェクト生成
-  const signatureObj = Signature.fromString(signature);
+  // 署名オブジェクト生成
+  const signatureObj = dsteem.Signature.fromString(signature);
 
-  // 4️⃣ 公開鍵を復元（※ recover は digest を Buffer で渡す）
-  const recoveredPubKey = PublicKey.from(signatureObj.recover(digest)).toString();
-
+  // 公開鍵を復元（※ recover は digest を Buffer で渡す）
+  const recoveredPubKey = dsteem.PublicKey.from(signatureObj.recover(digest)).toString();
   console.log(recoveredPubKey)
 
-  const key1 = Signature.fromString(signature).recover(dsteem.cryptoUtils.sha256(message)).toString();
-  console.info(key1)
 } catch (error) {
   console.log(error)
 }
