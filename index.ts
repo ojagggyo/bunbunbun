@@ -1,5 +1,6 @@
-import { randomBytes } from "crypto";
+import { readFileSync } from "fs";
 
+import { randomBytes } from "crypto";
 import * as secp from "@noble/secp256k1";
 import { createHash } from "crypto";
 import bs58 from "bs58";
@@ -17,8 +18,6 @@ function bytesToHex(bytes: Uint8Array): string { return Array.from(bytes).map(b 
 
 function test(message: string, signature: string){
     try {
-    //const signature = "20356757cb7d303ece5852aa84dc1d4e1ca27099ee99023a216e3b2e43f13ead677f69be476b6004a027b77a743ab113ec3ba168a6d758e2c13ce6cc80ac2d0406";
-    //const message = "Login to mysite with nonce: 14a31bde6b422d0f3a1bfe47758cc7f0";
     // SHA256
     const digest = sha256(new TextEncoder().encode(message));
     // Steem署名解析
@@ -39,8 +38,11 @@ function test(message: string, signature: string){
 const nonces = new Map();
 
 Bun.serve({
-    port: 3333,
-
+    //port: 3333,
+    port: 443,
+    key: readFileSync("./certs/privkey.pem"),
+    cert: readFileSync("./certs/fullchain.pem"),
+ 
     async fetch(req) {
         const url = new URL(req.url);
 
@@ -99,4 +101,5 @@ Bun.serve({
     },
 });
 
-console.log("✅ Server running on http://localhost:3333");
+//console.log(`✅ Server running on http://localhost:3333`);
+console.log(`✅ Server running on https://bun.steememory.com`);
