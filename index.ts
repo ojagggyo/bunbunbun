@@ -27,8 +27,8 @@ function test(message: string, signature: string) {
         // 公開鍵復元
         const pubkey = secp.recoverPublicKey(digest, compactSig, recovery, true);
         // Steem形式に変換
-        const steemPubkey = pubkeyToSteem(pubkey);
-        console.log("Steem PubKey:", steemPubkey);
+        //const steemPubkey = pubkeyToSteem(pubkey);
+        //console.log("Steem PubKey:", steemPubkey);
         // 署名検証
         const isValid = secp.verify(compactSig, digest, pubkey);
         console.log("isValid :", isValid);
@@ -38,7 +38,6 @@ function test(message: string, signature: string) {
         console.error(err);
     }
 }
-
 
 const nonces = new Map();
 
@@ -87,7 +86,6 @@ Bun.serve({
                 } else {
                     return Response.json({ success: false, error: "Invalid signature" });
                 }
-
             } catch (err) {
                 console.error(err);
                 return Response.json({ error: err.message }, { status: 500 });
