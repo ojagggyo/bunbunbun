@@ -47,7 +47,6 @@ Bun.serve({
 
     async fetch(req) {
         const url = new URL(req.url);
-
         if (url.pathname === "/api/get-nonce") {
             const username = url.searchParams.get("username");
             if (!username)
@@ -56,7 +55,6 @@ Bun.serve({
             nonces.set(username, nonce);
             return Response.json({ nonce });
         }
-
         if (url.pathname === "/api/verify" && req.method === "POST") {
             try {
                 const { username, message, signature, publicKey } = await req.json() as any;
@@ -90,7 +88,6 @@ Bun.serve({
                 return Response.json({ error: err.message }, { status: 500 });
             }
         }
-
         if (url.pathname === "/" && req.method === "GET") {
             const BASE_PATH = '/home/steem/keychaintest';
             const path = new URL(req.url).pathname;
@@ -98,7 +95,6 @@ Bun.serve({
             const file = Bun.file(filePath);
             return new Response(file);
         }
-
         return new Response("Not Found", { status: 404 });
     },
 });
