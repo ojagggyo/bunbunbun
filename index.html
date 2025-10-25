@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Steem Keychain Login Demo</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 500px;
+      margin: 50px auto;
+      background: #fafafa;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 2em;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #2f9fea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #238ad3;
+    }
+    pre {
+      background: #eee;
+      padding: 10px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Steem Keychain Login</h2>
+  <p>ユーザー名を入力して Keychain で署名ログインします。</p>
+
+  <input id="username" placeholder="steemユーザー名" />
+  <button onclick="login()">Login with Keychain</button>
+
+  <pre id="result"></pre>
+
+  <script>
+    async function login() {
+      const username = document.getElementById("username").value.trim();
+      const resultEl = document.getElementById("result");
+      resultEl.textContent = "";
+
+      if (!username) {
+        resultEl.textContent = "⚠️ ユーザー名を入力してください。";
+        return;
+      }
+
+      if (!window.steem_keychain) {
+        resultEl.textContent = "❌ Steem Keychain がインストールされていません。";
+        return;
+      }
+
+      try {
+        // ① サーバーから nonce を取得
+        const nonceRes = await fetch(`/api/get-nonce?username=${username}`);
+        const { nonce, error } = await nonceRes.json();
+        if (error) throw new Error(error);
+
+        const message = `Login to mysite with nonce: ${nonce}`;
+
+        // ② Keychain で署名を作成
+        steem_keychain.requestSignBuffer(username, message, "Posting", async (res) => {
+          if (!res.success) {
+            resultEl.textContent = "署名に失敗しました。";
+            return;
+          }
+
+          const signature = res.result;
+          const publicKey = res.publicKey;
+
+console.info(res);
+console.info(res.success);
+console.info(signature);
+console.info(publicKey);
+
+          // ③ Bunサーバーに署名を送信して検証
+          const verifyRes = await fetch("/api/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, message, signature, publicKey }),
+          });
+
+          const verifyData = await verifyRes.json();
+          resultEl.textContent = JSON.stringify(verifyData, null, 2);
+        });
+
+      } catch (err) {
+        resultEl.textContent = `❌ Error: ${err.message}`;
+      }
+    }
+  </script>
+
+</body>
+</html>
