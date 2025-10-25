@@ -16,21 +16,23 @@ function pubkeyToSteem(pubkey: Uint8Array): string {
 }
 function bytesToHex(bytes: Uint8Array): string { return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join(""); }
 
-function test(message: string, signature: string){
+function test(message: string, signature: string) {
     try {
-    // SHA256
-    const digest = sha256(new TextEncoder().encode(message));
-    // Steem署名解析
-    const sigBytes = Buffer.from(signature, "hex");
-    const recovery = (sigBytes[0] - 27) & 3;
-    const compactSig = sigBytes.slice(1, 65);
-    // 公開鍵復元
-    const pubkey = secp.recoverPublicKey(digest, compactSig, recovery, true);
-    // Steem形式に変換
-    const steemPubkey = pubkeyToSteem(pubkey);
-    console.log("Steem PubKey:", steemPubkey);
+        // SHA256
+        const digest = sha256(new TextEncoder().encode(message));
+        // Steem署名解析
+        const sigBytes = Buffer.from(signature, "hex");
+        const recovery = (sigBytes[0] - 27) & 3;
+        const compactSig = sigBytes.slice(1, 65);
+        // 公開鍵復元
+        const pubkey = secp.recoverPublicKey(digest, compactSig, recovery, true);
+        // Steem形式に変換
+        const steemPubkey = pubkeyToSteem(pubkey);
+        console.log("Steem PubKey:", steemPubkey);
+        // 署名検証
+        return secp.verify(compactSig, digest, pubkey);
     } catch (err) {
-    console.error(err);
+        console.error(err);
     }
 }
 
@@ -42,7 +44,7 @@ Bun.serve({
     port: 443,
     key: readFileSync("./certs/privkey.pem"),
     cert: readFileSync("./certs/fullchain.pem"),
- 
+
     async fetch(req) {
         const url = new URL(req.url);
 
@@ -74,13 +76,12 @@ Bun.serve({
                 if (message !== expectedMessage)
                     return Response.json({ error: "Invalid message" }, { status: 400 });
 
-                test(message , signature);
-                const isValid= true;
+                const isValid = test(message, signature);
                 if (isValid) {
-                nonces.delete(username);
-                return Response.json({ success: true, username });
+                    nonces.delete(username);
+                    return Response.json({ success: true, username });
                 } else {
-                return Response.json({ success: false, error: "Invalid signature" });
+                    return Response.json({ success: false, error: "Invalid signature" });
                 }
 
             } catch (err) {
