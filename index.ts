@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
-import { randomBytes } from "crypto";
+//import { randomBytes } from "crypto";
 import * as secp from "@noble/secp256k1";
-//import { createHash } from "crypto";
+import { createHash } from "crypto";
 import bs58 from "bs58";
 
 function sha256(data: Uint8Array): Uint8Array { return new Uint8Array(createHash("sha256").update(data).digest()); }
