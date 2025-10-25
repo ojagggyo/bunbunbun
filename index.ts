@@ -3,7 +3,7 @@ import { randomBytes, createHash  } from "crypto";
 import * as secp from "@noble/secp256k1";
 import bs58 from "bs58";
 
-function sha256(data: Uint8Array): Uint8Array { return new Uint8Array(createHash("sha256").update(data).digest()); }
+//function sha256(data: Uint8Array): Uint8Array { return new Uint8Array(createHash("sha256").update(data).digest()); }
 function ripemd160(data: Uint8Array): Uint8Array { return new Uint8Array(createHash("ripemd160").update(data).digest()); }
 function pubkeyToSteem(pubkey: Uint8Array): string {
     const checksum = ripemd160(pubkey).slice(0, 4);// compressed pubkey → RIPEMD160 ハッシュ
@@ -12,12 +12,13 @@ function pubkeyToSteem(pubkey: Uint8Array): string {
     full.set(checksum, pubkey.length);
     return "STM" + bs58.encode(full);// Base58 エンコード
 }
-function bytesToHex(bytes: Uint8Array): string { return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join(""); }
+//function bytesToHex(bytes: Uint8Array): string { return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join(""); }
 
 function test(message: string, signature: string) {
     try {
         // SHA256
-        const digest = sha256(new TextEncoder().encode(message));
+        //const digest = sha256(new TextEncoder().encode(message));
+        const digest = Bun.SHA256.hash(new TextEncoder().encode(message));
         // Steem署名解析
         const sigBytes = Buffer.from(signature, "hex");
         const recovery = (sigBytes[0] - 27) & 3;
@@ -47,7 +48,6 @@ Bun.serve({
 
     async fetch(req) {
         const url = new URL(req.url);
-
         if (url.pathname === "/api/get-nonce") {
             const username = url.searchParams.get("username");
             if (!username)
@@ -56,7 +56,6 @@ Bun.serve({
             nonces.set(username, nonce);
             return Response.json({ nonce });
         }
-
         if (url.pathname === "/api/verify" && req.method === "POST") {
             try {
                 const { username, message, signature, publicKey } = await req.json() as any;
@@ -90,7 +89,6 @@ Bun.serve({
                 return Response.json({ error: err.message }, { status: 500 });
             }
         }
-
         if (url.pathname === "/" && req.method === "GET") {
             const BASE_PATH = import.meta.dir;
             //const BASE_PATH = '/home/steem/keychaintest';
@@ -99,7 +97,6 @@ Bun.serve({
             const file = Bun.file(filePath);
             return new Response(file);
         }
-
         return new Response("Not Found", { status: 404 });
     },
 });

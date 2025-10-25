@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8">
   <title>Steem Keychain Login Demo</title>
@@ -10,9 +11,10 @@
       margin: 50px auto;
       background: #fafafa;
       border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       padding: 2em;
     }
+
     input {
       width: 100%;
       padding: 10px;
@@ -20,6 +22,7 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
+
     button {
       width: 100%;
       padding: 10px;
@@ -30,9 +33,11 @@
       font-size: 16px;
       cursor: pointer;
     }
+
     button:hover {
       background: #238ad3;
     }
+
     pre {
       background: #eee;
       padding: 10px;
@@ -41,6 +46,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <h2>Steem Keychain Login</h2>
@@ -81,14 +87,13 @@
             resultEl.textContent = "署名に失敗しました。";
             return;
           }
-
           const signature = res.result;
           const publicKey = res.publicKey;
 
-console.info(res);
-console.info(res.success);
-console.info(signature);
-console.info(publicKey);
+          console.info(res);
+          console.info(res.success);
+          console.info(signature);
+          console.info(publicKey);
 
           // ③ Bunサーバーに署名を送信して検証
           const verifyRes = await fetch("/api/verify", {
@@ -108,4 +113,5 @@ console.info(publicKey);
   </script>
 
 </body>
+
 </html>
