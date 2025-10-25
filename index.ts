@@ -30,7 +30,10 @@ function test(message: string, signature: string) {
         const steemPubkey = pubkeyToSteem(pubkey);
         console.log("Steem PubKey:", steemPubkey);
         // 署名検証
-        return secp.verify(compactSig, digest, pubkey);
+        const isValid = secp.verify(compactSig, digest, pubkey);
+        console.log("isValid :", isValid);
+        return isValid;
+
     } catch (err) {
         console.error(err);
     }
@@ -77,6 +80,7 @@ Bun.serve({
                     return Response.json({ error: "Invalid message" }, { status: 400 });
 
                 const isValid = test(message, signature);
+
                 if (isValid) {
                     nonces.delete(username);
                     return Response.json({ success: true, username });
