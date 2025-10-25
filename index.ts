@@ -8,11 +8,11 @@ import bs58 from "bs58";
 function sha256(data: Uint8Array): Uint8Array { return new Uint8Array(createHash("sha256").update(data).digest()); }
 function ripemd160(data: Uint8Array): Uint8Array { return new Uint8Array(createHash("ripemd160").update(data).digest()); }
 function pubkeyToSteem(pubkey: Uint8Array): string {
-    const checksum = ripemd160(pubkey).slice(0, 4);// 1️⃣ compressed pubkey → RIPEMD160 ハッシュ
-    const full = new Uint8Array(pubkey.length + 4);// 2️⃣ pubkey + checksum
+    const checksum = ripemd160(pubkey).slice(0, 4);// compressed pubkey → RIPEMD160 ハッシュ
+    const full = new Uint8Array(pubkey.length + 4);// pubkey + checksum
     full.set(pubkey, 0);
     full.set(checksum, pubkey.length);
-    return "STM" + bs58.encode(full);// 3️⃣ Base58 エンコード
+    return "STM" + bs58.encode(full);// Base58 エンコード
 }
 function bytesToHex(bytes: Uint8Array): string { return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join(""); }
 
@@ -61,11 +61,12 @@ Bun.serve({
 
         if (url.pathname === "/api/verify" && req.method === "POST") {
             try {
-                const { username, message, signature, publicKey } = await req.json();
-                console.info(username)
-                console.info(message)
-                console.info(signature)
-                console.info(publicKey)
+                const { username, message, signature, publicKey } = await req.json() as any;
+
+                console.info("username: ", username)
+                console.info("message: ", message)
+                console.info("signature: ", signature)
+                console.info("publicKey: ", publicKey)
 
                 if (!username || !message || !signature || !publicKey)
                     return Response.json({ error: "Missing parameters" }, { status: 400 });
