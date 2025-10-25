@@ -89,7 +89,8 @@ Bun.serve({
             }
         }
         if (url.pathname === "/" && req.method === "GET") {
-            const BASE_PATH = '/home/steem/keychaintest';
+            const BASE_PATH = import.meta.dir;
+            //const BASE_PATH = '/home/steem/keychaintest';
             const path = new URL(req.url).pathname;
             const filePath = `${BASE_PATH}${path === '/' ? '/index.html' : path}`;
             const file = Bun.file(filePath);
