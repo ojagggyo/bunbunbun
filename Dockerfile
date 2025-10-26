@@ -5,9 +5,10 @@ FROM oven/bun:latest
 WORKDIR /app
 
 # ファイルをコピーする
-COPY package.json ./
-COPY index.ts ./
-COPY index.html ./
+COPY package.json .
+COPY index.ts .
+COPY index.html .
+COPY storage.html .
 COPY ./certs/ ./certs/
 
 RUN apt-get update -y
