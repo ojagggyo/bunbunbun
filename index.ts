@@ -89,6 +89,10 @@ Bun.serve({
                 return Response.json({ error: err.message }, { status: 500 });
             }
         }
+
+console.info("req.method: ",req.method);
+console.info("url.pathname: ",url.pathname);
+
         if (url.pathname.startsWith("/")  && req.method === "GET") {
             const BASE_PATH = import.meta.dir;
             //const BASE_PATH = '/home/steem/keychaintest';
