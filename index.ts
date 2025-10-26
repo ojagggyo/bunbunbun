@@ -112,4 +112,4 @@ Bun.serve({
   },
 } as HttpsServeOptions);
 
-console.log("✅ Bun HTTPS Server running on https://bun.ssteememory.com");
+console.log("✅ Bun HTTPS Server running on https://bun.steememory.com");
