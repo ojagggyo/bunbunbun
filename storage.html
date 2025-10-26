@@ -33,6 +33,12 @@
         <button type="submit">追加</button>
       </form>
 
+      <div style="margin-bottom:8px">
+        <button id="exportBtn">JSONエクスポート</button>
+        <label for="importFile" style="cursor:pointer; margin-left:8px; padding:6px 10px; background:#eee; border-radius:6px;">JSONインポート</label>
+        <input type="file" id="importFile" accept="application/json" style="display:none;" />
+      </div>
+
       <div id="listArea"></div>
     </section>
 
@@ -45,6 +51,8 @@
     const addForm = document.getElementById('addForm');
     const nameInput = document.getElementById('name');
     const rateInput = document.getElementById('rate');
+    const exportBtn = document.getElementById('exportBtn');
+    const importFile = document.getElementById('importFile');
 
     function loadAccounts(){
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -96,6 +104,35 @@
       renderList();
       addForm.reset();
       nameInput.focus();
+    });
+
+    exportBtn.addEventListener('click', ()=>{
+      const blob = new Blob([JSON.stringify(accounts, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'accounts.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    importFile.addEventListener('change', async (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      try {
+        const text = await file.text();
+        const imported = JSON.parse(text);
+        if(!Array.isArray(imported)) throw new Error('配列形式のJSONが必要です');
+        imported.forEach(item=>{
+          if(!item.id) item.id = uid();
+          accounts.push(item);
+        });
+        saveAccounts(accounts);
+        renderList();
+        importFile.value = '';
+      } catch(err){
+        alert('インポートに失敗しました: ' + err.message);
+      }
     });
 
     renderList();
