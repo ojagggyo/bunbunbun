@@ -40,6 +40,12 @@ function test(message: string, signature: string) {
 
 const nonces = new Map();
 
+type BunServeOptions = Parameters<typeof Bun.serve>[0];
+type HttpsServeOptions = BunServeOptions & {
+  key: string | Uint8Array;
+  cert: string | Uint8Array;
+};
+
 Bun.serve({
     //port: 3333,
     port: 443,
@@ -86,7 +92,7 @@ Bun.serve({
                 }
             } catch (err) {
                 console.error(err);
-                const msg = err instanceof Error ? err.message : String(err);                
+                const msg = err instanceof Error ? err.message : String(err);
                 return Response.json({ error: msg }, { status: 500 });
             }
         }
@@ -108,7 +114,7 @@ console.info("filePath: ",filePath);
         }
         return new Response("Not Found", { status: 404 });
     },
-});//as any); // ← 型を無視
+} as HttpsServeOptions); // ← 型を無視
 
 //console.log(`✅ Server running on http://localhost:3333`);
 console.log(`✅ Server running on https://bun.steememory.com`);
