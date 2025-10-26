@@ -57,26 +57,20 @@ Bun.serve({
   key: readFileSync(keyPath),
   cert: readFileSync(certPath),
 
-  routes: {
-    // GET nonce
-    "/api/get-nonce": (req) => {
-      if (req.method !== "GET") return new Response("Method Not Allowed", { status: 405 });
+  fetch(req) {
+    const routes: Record<string, (req: Request) => Response | Promise<Response>> = {
+      "/api/get-nonce": (req) => {
+        if (req.method !== "GET") return new Response("Method Not Allowed", { status: 405 });
+        const username = new URL(req.url).searchParams.get("username");
+        if (!username) return Response.json({ error: "username required" }, { status: 400 });
+        const nonce = randomBytes(16).toString("hex");
+        nonces.set(username, nonce);
+        return Response.json({ nonce });
+      },
 
-      const username = new URL(req.url).searchParams.get("username");
-      if (!username) return Response.json({ error: "username required" }, { status: 400 });
-
-      const nonce = randomBytes(16).toString("hex");
-      nonces.set(username, nonce);
-      return Response.json({ nonce });
-    },
-
-    // POST verify
-    "/api/verify": async (req) => {
-      if (req.method !== "POST") return new Response("Method Not Allowed", { status: 405 });
-
-      try {
+      "/api/verify": async (req) => {
+        if (req.method !== "POST") return new Response("Method Not Allowed", { status: 405 });
         const { username, message, signature, publicKey } = await req.json() as any;
-
         if (!username || !message || !signature || !publicKey)
           return Response.json({ error: "Missing parameters" }, { status: 400 });
 
@@ -94,24 +88,19 @@ Bun.serve({
           username: isValid ? username : undefined,
           error: isValid ? undefined : "Invalid signature"
         });
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        return Response.json({ error: msg }, { status: 500 });
-      }
-    },
+      },
 
-    // 静的ファイル
-    "/": (req) => {
-      if (req.method !== "GET") return new Response("Method Not Allowed", { status: 405 });
-      return new Response(Bun.file(`${import.meta.dir}/index.html`));
-    },
-    "/storage.html": (req) => {
-      if (req.method !== "GET") return new Response("Method Not Allowed", { status: 405 });
-      return new Response(Bun.file(`${import.meta.dir}/storage.html`));
-    },
+      "/": (req) => new Response(Bun.file(`${import.meta.dir}/index.html`)),
+      "/storage.html": (req) => new Response(Bun.file(`${import.meta.dir}/storage.html`)),
+    };
+
+    // ルーティング
+    const url = new URL(req.url);
+    const handler = routes[url.pathname];
+    if (handler) return handler(req);
 
     // 404 fallback
-    default: () => new Response("Not Found", { status: 404 }),
+    return new Response("Not Found", { status: 404 });
   },
 } as HttpsServeOptions);
 
