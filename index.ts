@@ -86,6 +86,9 @@ Bun.serve({
         if (message !== expectedMessage) return Response.json({ error: "Invalid message" }, { status: 400 });
 
         const isValid = test(message, signature);
+
+                console.info("isValid: ", isValid)
+
         if (isValid) nonces.delete(username);
 
         return Response.json({
