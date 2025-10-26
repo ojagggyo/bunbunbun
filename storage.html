@@ -29,7 +29,7 @@
     <section class="card">
       <form id="addForm">
         <input type="text" id="name" placeholder="アカウント名" required />
-        <input type="text" id="rate" placeholder="アップボート率" required />
+        <input type="text" id="rate" placeholder="アップボート率" value="100" required />
         <button type="submit">追加</button>
       </form>
 
@@ -100,10 +100,12 @@
       const name = nameInput.value.trim();
       const rate = rateInput.value.trim();
       if(!name || !rate) return;
+      if(!rate) rate = '100'; // 空欄なら100
       accounts.push({id: uid(), name, rate});
       saveAccounts(accounts);
       renderList();
       addForm.reset();
+      rateInput.value = '100'; // リセット後も100
       nameInput.focus();
     });
 
