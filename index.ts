@@ -74,6 +74,11 @@ Bun.serve({
         if (!username || !message || !signature || !publicKey)
           return Response.json({ error: "Missing parameters" }, { status: 400 });
 
+                console.info("username: ", username)
+                console.info("message: ", message)
+                console.info("signature: ", signature)
+                console.info("publicKey: ", publicKey)
+
         const storedNonce = nonces.get(username);
         if (!storedNonce) return Response.json({ error: "Nonce not found" }, { status: 400 });
 
