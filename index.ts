@@ -27,7 +27,7 @@ function test(message: string, signature: string): boolean {
     const sigBytes = Buffer.from(signature, "hex");
     if (sigBytes.length < 65) return false;
 
-    const recovery = ((sigBytes[0] - 27) & 3);
+    const recovery = (((sigBytes?.[0] ?? 0) - 27) & 3);
     const compactSig = sigBytes.slice(1, 65);
     const pubkey = secp.recoverPublicKey(digest as Uint8Array, compactSig, recovery, true);
     return secp.verify(compactSig, digest as Uint8Array, pubkey);
