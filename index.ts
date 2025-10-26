@@ -21,15 +21,15 @@ function test(message: string, signature: string) {
         const digest = Bun.SHA256.hash(new TextEncoder().encode(message));
         // Steem署名解析
         const sigBytes = Buffer.from(signature, "hex");
-        const recovery = (sigBytes[0] - 27) & 3;
+        const recovery = ((sigBytes?.[0] ?? 0) - 27) & 3;//const recovery = (sigBytes[0] - 27) & 3;
         const compactSig = sigBytes.slice(1, 65);
         // 公開鍵復元
-        const pubkey = secp.recoverPublicKey(digest, compactSig, recovery, true);
+        const pubkey = secp.recoverPublicKey(digest as Uint8Array, compactSig, recovery, true);
         // Steem形式に変換
         //const steemPubkey = pubkeyToSteem(pubkey);
         //console.log("Steem PubKey:", steemPubkey);
         // 署名検証
-        const isValid = secp.verify(compactSig, digest, pubkey);
+        const isValid = secp.verify(compactSig, digest as Uint8Array, pubkey);
         console.log("isValid :", isValid);
         return isValid;
 
@@ -43,8 +43,8 @@ const nonces = new Map();
 Bun.serve({
     //port: 3333,
     port: 443,
-    key: readFileSync("./certs/privkey.pem"),
-    cert: readFileSync("./certs/fullchain.pem"),
+    key: readFileSync("./certs/privkey.pem"),       // 秘密鍵
+    cert: readFileSync("./certs/fullchain.pem"),    // 証明書
 
     async fetch(req) {
         const url = new URL(req.url);
@@ -86,7 +86,8 @@ Bun.serve({
                 }
             } catch (err) {
                 console.error(err);
-                return Response.json({ error: err.message }, { status: 500 });
+                const msg = err instanceof Error ? err.message : String(err);                
+                return Response.json({ error: msg }, { status: 500 });
             }
         }
 
@@ -107,7 +108,7 @@ console.info("filePath: ",filePath);
         }
         return new Response("Not Found", { status: 404 });
     },
-});
+});//as any); // ← 型を無視
 
 //console.log(`✅ Server running on http://localhost:3333`);
 console.log(`✅ Server running on https://bun.steememory.com`);
