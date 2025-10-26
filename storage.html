@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>localStorageでアカウント一覧</title>
+  <title>アカウントとアップボート率</title>
   <style>
     :root{--bg:#f6f8fb;--card:#fff;--accent:#2563eb;--muted:#666}
     body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); margin:0; padding:24px; color:#111}
@@ -11,25 +11,28 @@
     header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
     h1{font-size:20px;margin:0}
     .card{background:var(--card);border-radius:10px;padding:16px;box-shadow:0 4px 12px rgba(20,20,40,0.06)}
-    .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:12px}
-    .meta{font-size:13px;color:var(--muted)}
     table{width:100%;border-collapse:collapse;margin-top:12px}
     th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #f1f3f6}
     th{font-size:13px;color:var(--muted)}
     .empty{padding:28px;text-align:center;color:var(--muted)}
+    form{display:flex;gap:8px;margin-bottom:12px}
+    input[type=text]{flex:1;padding:6px;border-radius:6px;border:1px solid #e6e9ef}
+    button{background:var(--accent);color:#fff;padding:6px 10px;border-radius:6px;border:0;cursor:pointer}
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>アカウント一覧</h1>
-      <div class="meta">保存キー: <span class="meta" id="storageKey">accounts</span></div>
+      <h1>アカウントとアップボート率</h1>
     </header>
 
     <section class="card">
-      <div class="toolbar">
-        <button id="clearAllBtn">すべて削除</button>
-      </div>
+      <form id="addForm">
+        <input type="text" id="name" placeholder="アカウント名" required />
+        <input type="text" id="rate" placeholder="アップボート率" required />
+        <button type="submit">追加</button>
+      </form>
+
       <div id="listArea"></div>
     </section>
 
@@ -38,20 +41,23 @@
 
   <script>
     const STORAGE_KEY = 'accounts';
+    const listArea = document.getElementById('listArea');
+    const addForm = document.getElementById('addForm');
+    const nameInput = document.getElementById('name');
+    const rateInput = document.getElementById('rate');
 
     function loadAccounts(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if(!raw) return [];
-        return JSON.parse(raw);
-      }catch(e){ return []; }
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return [];
+      try { return JSON.parse(raw); } catch { return []; }
     }
 
     function saveAccounts(accounts){
       localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
     }
 
-    const listArea = document.getElementById('listArea');
+    function uid(){ return 'id-' + Math.random().toString(36).slice(2,9); }
+
     let accounts = loadAccounts();
 
     function renderList(){
@@ -59,8 +65,8 @@
         listArea.innerHTML = '<div class="empty">登録されたアカウントがありません。</div>';
         return;
       }
-      let html = '<table><thead><tr><th>アカウント名</th><th>アップデート率</th><th>操作</th></tr></thead><tbody>';
-      accounts.forEach(acc => {
+      let html = '<table><thead><tr><th>アカウント名</th><th>アップボート率</th><th>操作</th></tr></thead><tbody>';
+      accounts.forEach(acc=>{
         html += `<tr data-id="${acc.id}"><td>${escapeHtml(acc.name)}</td><td>${escapeHtml(acc.rate)}</td>`+
                 `<td><button data-action="delete">削除</button></td></tr>`;
       });
@@ -80,12 +86,16 @@
 
     function escapeHtml(s){ if(!s) return ''; return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
 
-    document.getElementById('clearAllBtn').addEventListener('click', ()=>{
-      if(confirm('本当にすべて削除しますか？')){
-        accounts = [];
-        saveAccounts(accounts);
-        renderList();
-      }
+    addForm.addEventListener('submit', e=>{
+      e.preventDefault();
+      const name = nameInput.value.trim();
+      const rate = rateInput.value.trim();
+      if(!name || !rate) return;
+      accounts.push({id: uid(), name, rate});
+      saveAccounts(accounts);
+      renderList();
+      addForm.reset();
+      nameInput.focus();
     });
 
     renderList();
