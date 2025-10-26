@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>localStorageでデータ登録・一覧表示</title>
+  <style>
+    :root{--bg:#f6f8fb;--card:#fff;--accent:#2563eb;--muted:#666}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); margin:0; padding:24px; color:#111}
+    .container{max-width:900px;margin:0 auto}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    h1{font-size:20px;margin:0}
+    .card{background:var(--card);border-radius:10px;padding:16px;box-shadow:0 4px 12px rgba(20,20,40,0.06)}
+    form{display:grid;grid-template-columns:1fr 220px;gap:12px}
+    label{display:block;font-size:13px;margin-bottom:6px;color:var(--muted)}
+    input[type=text],textarea,select{width:100%;padding:8px;border-radius:8px;border:1px solid #e6e9ef;font-size:14px}
+    textarea{resize:vertical;height:68px}
+    .controls{display:flex;gap:8px;align-items:center}
+    button{background:var(--accent);color:#fff;padding:8px 12px;border-radius:8px;border:0;cursor:pointer}
+    button.ghost{background:transparent;color:var(--accent);border:1px solid #e6e9ef}
+    .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+    .meta{font-size:13px;color:var(--muted)}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #f1f3f6}
+    th{font-size:13px;color:var(--muted)}
+    .actions{display:flex;gap:6px}
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#f1f5ff;color:#1e3a8a;font-size:12px}
+    .empty{padding:28px;text-align:center;color:var(--muted)}
+    input[type=file]{display:none}
+    @media (max-width:700px){form{grid-template-columns:1fr} .controls{flex-wrap:wrap}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>localStorageでデータ登録・一覧表示</h1>
+      <div class="meta">保存キー: <span class="pill" id="storageKey">items</span></div>
+    </header>
+
+    <section class="card">
+      <form id="itemForm">
+        <div>
+          <label for="title">タイトル</label>
+          <input id="title" name="title" type="text" placeholder="例：買い物リスト" required />
+          <label for="note" style="margin-top:8px">メモ</label>
+          <textarea id="note" name="note" placeholder="任意のメモ"></textarea>
+          <label for="tag" style="margin-top:8px">タグ</label>
+          <input id="tag" name="tag" type="text" placeholder="例：仕事,買い物" />
+        </div>
+
+        <div style="display:flex;flex-direction:column;justify-content:space-between">
+          <div>
+            <label for="priority">優先度</label>
+            <select id="priority" name="priority">
+              <option value="low">低</option>
+              <option value="medium" selected>中</option>
+              <option value="high">高</option>
+            </select>
+          </div>
+
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
+            <button type="submit">追加する</button>
+            <button type="button" class="ghost" id="clearFormBtn">フォームをクリア</button>
+          </div>
+        </div>
+      </form>
+
+      <div class="toolbar" style="margin-top:14px">
+        <input id="search" type="text" placeholder="検索（タイトル・メモ・タグ）" style="padding:8px;border-radius:8px;border:1px solid #e6e9ef;flex:1" />
+        <select id="sortBy" style="padding:8px;border-radius:8px;border:1px solid #e6e9ef">
+          <option value="created_desc">新しい順</option>
+          <option value="created_asc">古い順</option>
+          <option value="priority">優先度</option>
+          <option value="title">タイトル A→Z</option>
+        </select>
+
+        <button id="exportBtn" class="ghost">JSONエクスポート</button>
+        <label for="importFile" class="ghost" style="cursor:pointer;padding:8px 12px;border-radius:8px">JSONインポート</label>
+        <input id="importFile" type="file" accept="application/json" />
+        <button id="clearAllBtn" class="ghost">すべて削除</button>
+      </div>
+
+      <div id="listArea"></div>
+    </section>
+
+    <p style="margin-top:10px;color:var(--muted);font-size:13px">※ ブラウザのlocalStorageに保存します。別のブラウザやプライベートモードでは同期されません。</p>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'items';
+
+    // ヘルパー: 簡易UUID
+    function uid() {
+      return 'id-' + Math.random().toString(36).slice(2, 9);
+    }
+
+    function nowISO() { return new Date().toISOString(); }
+
+    // localStorageの読み書き
+    function loadItems(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return [];
+        return JSON.parse(raw);
+      }catch(e){ console.error('読み込み失敗', e); return []; }
+    }
+    function saveItems(items){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    }
+
+    // UI要素
+    const form = document.getElementById('itemForm');
+    const titleInput = document.getElementById('title');
+    const noteInput = document.getElementById('note');
+    const tagInput = document.getElementById('tag');
+    const prioritySelect = document.getElementById('priority');
+    const listArea = document.getElementById('listArea');
+    const searchInput = document.getElementById('search');
+    const sortBy = document.getElementById('sortBy');
+    const storageKeyLabel = document.getElementById('storageKey');
+
+    // 初期表示
+    let items = loadItems();
+    renderList();
+
+    // フォーム送信（追加）
+    form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const t = titleInput.value.trim();
+      if(!t) return alert('タイトルは必須です');
+      const newItem = {
+        id: uid(),
+        title: t,
+        note: noteInput.value.trim(),
+        tag: tagInput.value.split(',').map(s=>s.trim()).filter(Boolean),
+        priority: prioritySelect.value,
+        createdAt: nowISO(),
+        updatedAt: nowISO()
+      };
+      items.unshift(newItem);
+      saveItems(items);
+      renderList();
+      form.reset();
+      titleInput.focus();
+    });
+
+    document.getElementById('clearFormBtn').addEventListener('click', ()=> form.reset());
+
+    // 検索・ソート入力
+    searchInput.addEventListener('input', renderList);
+    sortBy.addEventListener('change', renderList);
+
+    // エクスポート
+    document.getElementById('exportBtn').addEventListener('click', ()=>{
+      const blob = new Blob([JSON.stringify(items, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'localstorage-items.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    // インポート
+    document.getElementById('importFile').addEventListener('change', async (e)=>{
+      const f = e.target.files[0];
+      if(!f) return;
+      try{
+        const text = await f.text();
+        const parsed = JSON.parse(text);
+        if(!Array.isArray(parsed)) throw new Error('配列ではありません');
+        // マージする（idが衝突する場合は上書きしない）
+        const existingById = Object.fromEntries(items.map(it=>[it.id,it]));
+        parsed.forEach(p=>{
+          if(!p.id) p.id = uid();
+          if(!existingById[p.id]) items.push(p);
+        });
+        saveItems(items);
+        renderList();
+        e.target.value = '';
+      }catch(err){ alert('インポートに失敗しました: '+err.message); }
+    });
+
+    // すべて削除
+    document.getElementById('clearAllBtn').addEventListener('click', ()=>{
+      if(!confirm('本当にすべて削除しますか？')) return;
+      items = [];
+      saveItems(items);
+      renderList();
+    });
+
+    // レンダリング
+    function renderList(){
+      const q = searchInput.value.trim().toLowerCase();
+      let list = items.slice();
+
+      // フィルタ
+      if(q){
+        list = list.filter(it=>{
+          return (it.title && it.title.toLowerCase().includes(q))
+            || (it.note && it.note.toLowerCase().includes(q))
+            || (Array.isArray(it.tag) && it.tag.join(' ').toLowerCase().includes(q));
+        });
+      }
+
+      // ソート
+      const mode = sortBy.value;
+      if(mode === 'created_desc') list.sort((a,b)=> b.createdAt.localeCompare(a.createdAt));
+      else if(mode === 'created_asc') list.sort((a,b)=> a.createdAt.localeCompare(b.createdAt));
+      else if(mode === 'priority'){
+        const order = {high:0,medium:1,low:2};
+        list.sort((a,b)=> (order[a.priority]||9) - (order[b.priority]||9));
+      }else if(mode === 'title') list.sort((a,b)=> (a.title||'').localeCompare(b.title||''));
+
+      // DOM構築
+      if(!list.length){
+        listArea.innerHTML = '<div class="empty card">登録されたデータがありません。</div>';
+        return;
+      }
+
+      let html = '<table><thead><tr><th>タイトル</th><th>メモ</th><th>タグ</th><th>優先度</th><th>作成日</th><th>操作</th></tr></thead><tbody>';
+      for(const it of list){
+        html += `<tr data-id="${it.id}">`+
+                `<td><strong>${escapeHtml(it.title)}</strong></td>`+
+                `<td>${escapeHtml(it.note||'')}</td>`+
+                `<td>${(Array.isArray(it.tag)?it.tag.map(t=>`<span class=\"pill\">${escapeHtml(t)}</span>`).join(' '):'')}</td>`+
+                `<td>${escapeHtml(it.priority||'')}</td>`+
+                `<td>${formatDate(it.createdAt)}</td>`+
+                `<td class="actions">`+
+                  `<button data-action="edit">編集</button>`+
+                  `<button data-action="delete" class="ghost">削除</button>`+
+                `</td>`+
+               `</tr>`;
+      }
+      html += '</tbody></table>';
+      listArea.innerHTML = html;
+
+      // 操作ボタンにイベントを張る
+      listArea.querySelectorAll('button[data-action]').forEach(btn=>{
+        btn.addEventListener('click', e=>{
+          const tr = e.target.closest('tr');
+          const id = tr.getAttribute('data-id');
+          const action = e.target.getAttribute('data-action');
+          if(action === 'edit') openEditDialog(id);
+          if(action === 'delete') removeItem(id);
+        });
+      });
+    }
+
+    // アイテム削除
+    function removeItem(id){
+      if(!confirm('このアイテムを削除しますか？')) return;
+      items = items.filter(it=>it.id !== id);
+      saveItems(items);
+      renderList();
+    }
+
+    // 編集（簡易ダイアログ）
+    function openEditDialog(id){
+      const it = items.find(x=>x.id===id);
+      if(!it) return alert('データが見つかりません');
+      const newTitle = prompt('タイトルを編集', it.title);
+      if(newTitle === null) return; // キャンセル
+      it.title = newTitle.trim();
+      const newNote = prompt('メモを編集', it.note || '');
+      if(newNote === null) return;
+      it.note = newNote.trim();
+      const newTag = prompt('タグをカンマ区切りで編集', (it.tag||[]).join(','));
+      if(newTag === null) return;
+      it.tag = newTag.split(',').map(s=>s.trim()).filter(Boolean);
+      const newPriority = prompt('優先度 (low / medium / high)', it.priority || 'medium');
+      if(newPriority === null) return;
+      it.priority = ['low','medium','high'].includes(newPriority)? newPriority : it.priority;
+      it.updatedAt = nowISO();
+      saveItems(items);
+      renderList();
+    }
+
+    // ユーティリティ
+    function escapeHtml(s){ if(!s) return ''; return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+    function formatDate(iso){ if(!iso) return ''; const d = new Date(iso); return d.toLocaleString(); }
+  </script>
+</body>
+</html>
