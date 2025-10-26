@@ -94,6 +94,9 @@ Bun.serve({
             //const BASE_PATH = '/home/steem/keychaintest';
             const path = new URL(req.url).pathname;
             const filePath = `${BASE_PATH}${path === '/' ? '/index.html' : path}`;
+
+console.info("filePath: ",filePath);
+
             const file = Bun.file(filePath);
             return new Response(file);
         }
