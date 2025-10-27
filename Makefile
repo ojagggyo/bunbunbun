@@ -2,7 +2,7 @@ default: build
 
 build:
 	git pull
-	docker-compose up --build -d
+	docker-compose up -d --build
 	docker logs -f BUN
 logs:
 	docker logs -f BUN

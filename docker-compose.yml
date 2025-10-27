@@ -3,6 +3,7 @@ services:
   app:
     container_name: BUN
     build: .
+    image: ojagggyo/bunbunbun
     ports:
       - 443:443
 
