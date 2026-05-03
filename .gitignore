@@ -141,3 +141,4 @@ vite.config.ts.timestamp-*
 memo
 index copy.ts
 README.md
+certs_backup/
