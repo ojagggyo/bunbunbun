@@ -101,7 +101,7 @@ Bun.serve({
       },
 
     // "/api/:method/:param" に対応する処理を追加
-      async "/api/:method/:param" (req) {
+      "/api/:method/:param": (req) => {
         const url = new URL(req.url);
         const pathParts = url.pathname.split("/").filter(Boolean); // 空文字削除
 
