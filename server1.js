@@ -5,6 +5,8 @@ serve({
   fetch: async (req) => {
     const url = new URL(req.url);
 
+console.log("url.pathname: ",url.pathname);
+
     // /hivemind/ に一致したときだけ処理
     if (url.pathname === "/hivemind/") {
       // Nginx と同じ固定JSONボディ
