@@ -116,6 +116,14 @@ Bun.serve({
     const handler = routes[url.pathname];
     if (handler) return handler(req);
 
+    // `/api/*` パターンにマッチする処理
+    const pathParts = url.pathname.split("/").filter(Boolean); // 空文字を除去
+    if (pathParts.length >= 2 && pathParts[0] === "api") {
+      const method = pathParts[1];  // :method
+      const param = pathParts.slice(2).join("/");   // すべての残りの部分を :param として処理
+        return Response.json({ method: `${method}`, param: `${param}`}, { status: 200 });
+    }
+
     // 404 fallback
     return new Response("Not Found", { status: 404 });
   }
