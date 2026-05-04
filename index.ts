@@ -101,7 +101,7 @@ Bun.serve({
       },
 
     // "/api/:method/:param" に対応する処理を追加
-      "/xxx/:method/:param": async (req) => {
+      "/xxx": async (req) => {
         const url = new URL(req.url);
         const pathParts = url.pathname.split("/").filter(Boolean); // 空文字削除
 
@@ -110,27 +110,12 @@ Bun.serve({
 
         console.log(`Method: ${method}, Param: ${param}`);
 
-        // パラメータに応じた処理を行う
-        if (method === "get-user") {
-          return Response.json({
-            message: `Fetching user: ${param}`,
-            status: "success"
-          }, { status: 200 });
-        }
-
-        if (method === "update-user") {
-          return Response.json({
-            message: `Updating user: ${param}`,
-            status: "success"
-          }, { status: 200 });
-        }
-
         // それ以外の method はエラーを返す
         return Response.json({
-          error: `Unsupported method: ${method}`
-        }, { status: 400 });
+            method: `Method: ${method}`,
+            param: `Param: ${param}`,
+        }, { status: 200 });
       },
-
 
       "/": (req) => new Response(Bun.file(`${import.meta.dir}/index.html`)),
       "/storage.html": (req) => new Response(Bun.file(`${import.meta.dir}/storage.html`)),
