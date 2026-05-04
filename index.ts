@@ -101,12 +101,15 @@ Bun.serve({
       },
 
     // "/api/:method/:param" に対応する処理を追加
-      "/api/:method/:param": async (req) => {
+      "/xxx/:method/:param": async (req) => {
         const url = new URL(req.url);
         const pathParts = url.pathname.split("/").filter(Boolean); // 空文字削除
 
         const method = pathParts[1]; // 動的パラメータ: method
         const param = pathParts[2];  // 動的パラメータ: param
+
+        console.log(`method: ${method}, param: ${param}`);
+
         return Response.json({ method: `${method}`, param: `${param}`}, { status: 200 });
       },
 
