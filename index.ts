@@ -100,6 +100,17 @@ Bun.serve({
         });
       },
 
+    // "/api/:method/:param" に対応する処理を追加
+      async "/api/:method/:param" (req) {
+        const url = new URL(req.url);
+        const pathParts = url.pathname.split("/").filter(Boolean); // 空文字削除
+
+        const method = pathParts[1]; // 動的パラメータ: method
+        const param = pathParts[2];  // 動的パラメータ: param
+        return Response.json({ method: `${method}`, param: `${param}`}, { status: 200 });
+      },
+
+
       "/": (req) => new Response(Bun.file(`${import.meta.dir}/index.html`)),
       "/storage.html": (req) => new Response(Bun.file(`${import.meta.dir}/storage.html`)),
       "/signatures.html": (req) => new Response(Bun.file(`${import.meta.dir}/signatures.html`)),
@@ -109,8 +120,6 @@ Bun.serve({
       "/proxy": (req) => new Response(Bun.file(`${import.meta.dir}/account_witness_proxy.html`)),
       "/handshake": (req) => new Response(Bun.file(`${import.meta.dir}/requestHandshake.html`)),
       "/version": (req) => new Response(Bun.file(`${import.meta.dir}/version.html`)),
-      
-      
     };
 
     // ルーティング
