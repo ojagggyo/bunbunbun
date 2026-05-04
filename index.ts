@@ -100,23 +100,6 @@ Bun.serve({
         });
       },
 
-    // "/api/:method/:param" に対応する処理を追加
-      "/xxx": async (req) => {
-        const url = new URL(req.url);
-        const pathParts = url.pathname.split("/").filter(Boolean); // 空文字削除
-
-        const method = pathParts[1]; // 動的パラメータ: method
-        const param = pathParts[2];  // 動的パラメータ: param
-
-        console.log(`Method: ${method}, Param: ${param}`);
-
-        // それ以外の method はエラーを返す
-        return Response.json({
-            method: `Method: ${method}`,
-            param: `Param: ${param}`,
-        }, { status: 200 });
-      },
-
       "/": (req) => new Response(Bun.file(`${import.meta.dir}/index.html`)),
       "/storage.html": (req) => new Response(Bun.file(`${import.meta.dir}/storage.html`)),
       "/signatures.html": (req) => new Response(Bun.file(`${import.meta.dir}/signatures.html`)),
