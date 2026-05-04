@@ -108,9 +108,27 @@ Bun.serve({
         const method = pathParts[1]; // 動的パラメータ: method
         const param = pathParts[2];  // 動的パラメータ: param
 
-        console.log(`method: ${method}, param: ${param}`);
+        console.log(`Method: ${method}, Param: ${param}`);
 
-        return Response.json({ method: `${method}`, param: `${param}`}, { status: 200 });
+        // パラメータに応じた処理を行う
+        if (method === "get-user") {
+          return Response.json({
+            message: `Fetching user: ${param}`,
+            status: "success"
+          }, { status: 200 });
+        }
+
+        if (method === "update-user") {
+          return Response.json({
+            message: `Updating user: ${param}`,
+            status: "success"
+          }, { status: 200 });
+        }
+
+        // それ以外の method はエラーを返す
+        return Response.json({
+          error: `Unsupported method: ${method}`
+        }, { status: 400 });
       },
 
 
