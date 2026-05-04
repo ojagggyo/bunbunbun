@@ -2,7 +2,8 @@ import { serve } from "bun";
 
 serve({
   port: 3000,
-  hostname: "0.0.0.0",  // ここでIPv4アドレスを指定
+  //hostname: "0.0.0.0",  // ここでIPv4アドレスを指定（IP4/IP6両方）
+  hostname: "::",  // IPv6 のみでリスン
   fetch: async (req) => {
     const url = new URL(req.url);
 
