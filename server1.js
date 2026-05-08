@@ -4,6 +4,8 @@ serve({
   port: 3000,
   //hostname: "0.0.0.0",  // ここでIPv4アドレスを指定（IP4/IP6両方）
   //hostname: "::",  // IPv6 のみでリスン
+  hostname: "2a02:c206:2205:1250::1", // IPv6 のみでリスン fetch: async (req) => {
+
   fetch: async (req) => {
     const url = new URL(req.url);
 
@@ -22,7 +24,7 @@ console.log("url.pathname: ",url.pathname);
       // backend に POST
       //const backend = await fetch("http://steememory.com:8888", {
       const backend = await fetch("https://steememory.com/hivemind/", {
-      
+
         method: "POST",
         headers: {
           "Content-Type": "application/json",
